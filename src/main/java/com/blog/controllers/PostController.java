@@ -3,6 +3,7 @@ package com.blog.controllers;
 import com.blog.models.Post;
 import com.blog.models.dtos.PostDTO;
 import com.blog.responses.PostResponse;
+import com.blog.services.IPostRedisService;
 import com.blog.services.IPostService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class PostController {
 
     @Autowired
     private IPostService postService;
+
+    @Autowired
+    private IPostRedisService postRedisService;
 
     @PostMapping(consumes = { MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> createPost(@Valid @RequestParam("file") MultipartFile file,
@@ -70,12 +74,28 @@ public class PostController {
     @GetMapping()
     public ResponseEntity<?> getPosts() {
         try {
-            List<PostResponse> post = postService.getPosts();
+            List<PostResponse> postResponseList = postRedisService.getPostsRedis();
+            if (postResponseList.isEmpty()) {
+                List<PostResponse> posts = postService.getPosts();
+                postRedisService.savePostsRedis(posts);
+                return ResponseEntity.ok(posts);
+            }
+            return ResponseEntity.ok(postResponseList);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/related/{slug}")
+    public ResponseEntity<?> getRelatedPosts(@PathVariable("slug") String slug) {
+        try {
+            List<PostResponse> post = postService.getRelatedPost(slug);
             return ResponseEntity.ok(post);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @GetMapping("/{slug}")
     public ResponseEntity<?> getPostById(@PathVariable("slug") String slug) {
         try {
@@ -86,10 +106,57 @@ public class PostController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updatePost(@PathVariable("id") long postId,@Valid @RequestBody  PostDTO postDTO) {
+    @PutMapping(value = "/update-with-image/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> updatePost(@PathVariable("id") long id,
+                                        @RequestParam("file") MultipartFile file,
+                                        @RequestParam("title") String title,
+                                        @RequestParam("content") String content,
+                                        @RequestParam("description") String desc,
+                                        @RequestParam("category_id") long category_id) {
         try {
-            postService.updatePost(postId, postDTO);
+            PostDTO postDTO = PostDTO.builder()
+                    .title(title)
+                    .content(content)
+                    .categoryId(category_id)
+                    .desc(desc)
+                    .slug("")
+                    .userId(1L)
+                    .build();
+
+                if (file.getSize() > 10 * 1024 * 1024) { // Kích thước > 10MB
+                    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                            .body("File is too large! Maximum size is 10MB");
+                }
+                String contentType = file.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                            .body("File must be an image");
+                }
+                String filename = storeFile(file);
+                postService.updatePost(id, postDTO, filename);
+
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PutMapping(value = "/update-without-image/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> updatePost(@PathVariable("id") long id,
+                                        @RequestParam("title") String title,
+                                        @RequestParam("content") String content,
+                                        @RequestParam("description") String desc,
+                                        @RequestParam("category_id") long category_id) {
+        try {
+            PostDTO postDTO = PostDTO.builder()
+                    .title(title)
+                    .content(content)
+                    .categoryId(category_id)
+                    .desc(desc)
+                    .slug("")
+                    .userId(1L)
+                    .build();
+
+                postService.updatePost(id, postDTO);
             return ResponseEntity.ok(true);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

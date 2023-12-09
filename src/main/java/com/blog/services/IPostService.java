@@ -15,7 +15,10 @@ public interface IPostService {
 
     void updatePost(long postId, PostDTO postDTO);
 
+    void updatePost(long postId, PostDTO postDTO, String image);
     void deletePost(long postId);
 
     List<PostResponse> getPosts();
+
+    List<PostResponse> getRelatedPost(String slug);
 }

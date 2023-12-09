@@ -73,7 +73,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private boolean isBypassToken(@NonNull HttpServletRequest request) {
         final List<Pair<String, String>> bypassTokens = Arrays.asList(
                 // Healthcheck request, no JWT token required
-                Pair.of("/kafka/publish", "GET"),
+                Pair.of(String.format("%s/kafka**", apiPrefix), "GET"),
                 Pair.of("/swagger-ui/index.html", "GET"),
                 Pair.of(String.format("%s/user/login", apiPrefix), "POST"),
 

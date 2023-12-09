@@ -19,5 +19,8 @@ public interface IPostRepository extends JpaRepository<Post, Long> {
     @Query(value = "select * from posts p order by p.updated_at desc", nativeQuery = true)
     List<Post> findPostsOrderByUpdatedAt();
 
+    @Query(value = "select * from posts p where p.slug != ?1 and p.category_id = ?2 order by p.updated_at desc limit 5", nativeQuery = true)
+    List<Post> findRelatedPosts(String slug, long categoryId);
+
     List<Post> findPostsByPostCategory(Category postCategory);
 }

@@ -27,6 +27,10 @@ public class PostService implements IPostService{
 
     @Autowired
     private ICategoryRepository categoryRepository;
+
+    @Autowired
+    private IKafkaProducerService kafkaProducerService;
+
     @Override
     public void createPost(PostDTO postDTO,String image) {
         Category category = categoryRepository.findCategoryById(postDTO.getCategoryId()).orElseThrow(
@@ -46,7 +50,9 @@ public class PostService implements IPostService{
                 .slug(postDTO.getSlug())
                 .build();
 
-        postRepository.save(post);
+        Post newPost  = postRepository.saveAndFlush(post);
+        String message = "Add Blog success: "+newPost.getId().toString()+ ", created at: "+ newPost.getCreatedAt().toString();
+        kafkaProducerService.sendMessage(message);
     }
 
     @Override
@@ -72,6 +78,22 @@ public class PostService implements IPostService{
     }
 
     @Override
+    public void updatePost(long postId, PostDTO postDTO, String image) {
+        Post post = postRepository.findById(postId).orElseThrow(
+                () -> new DataNotFoundException("post is not found")
+        );
+        Category category = categoryRepository.findCategoryById(postDTO.getCategoryId()).orElseThrow(
+                () -> new DataNotFoundException("Category is not found")
+        );
+        post.setTitle(postDTO.getTitle());
+        post.setContent(postDTO.getContent());
+        post.setPostCategory(category);
+        post.setDesc(postDTO.getDesc());
+        post.setImage(image);
+        postRepository.save(post);
+    }
+
+    @Override
     public void deletePost(long postId) {
 
     }
@@ -79,5 +101,14 @@ public class PostService implements IPostService{
     @Override
     public List<PostResponse> getPosts() {
         return postRepository.findPostsOrderByUpdatedAt().stream().map(PostResponse::fromPost).toList();
+    }
+
+    // Limit 5
+    @Override
+    public List<PostResponse> getRelatedPost(String slug) {
+        Post post = postRepository.findPostBySlug(slug).orElseThrow(
+                () -> new DataNotFoundException("post is not found")
+        );
+        return postRepository.findRelatedPosts(slug, post.getPostCategory().getId()).stream().map(PostResponse::fromPost).toList();
     }
 }

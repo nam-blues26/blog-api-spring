@@ -53,8 +53,8 @@ public class WebSecurityConfig {
 
                             .requestMatchers(GET,
                                     String.format("%s/post/**", apiPrefix)).permitAll()
-//                            .requestMatchers(POST,
-//                                    String.format("%s/post/**", apiPrefix)).permitAll()
+                            .requestMatchers(GET,
+                                    String.format("%s/kafka/**", apiPrefix)).permitAll()
                             .requestMatchers(GET,
                                     String.format("/swagger-ui.html")).permitAll()
                             .anyRequest()
