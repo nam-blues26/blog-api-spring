@@ -12,7 +12,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
 
 @Configuration
 @EnableWebMvc
@@ -33,6 +32,7 @@ public class WebSecurityConfig {
                     r.requestMatchers(
                                     String.format("%s/user/register", apiPrefix),
                                     String.format("%s/user/login", apiPrefix),
+//                            String.format("%s/post", apiPrefix),
                                     "/api-docs",
                                     "/api-docs/**",
                                     "/swagger-resources",
@@ -53,6 +53,8 @@ public class WebSecurityConfig {
 
                             .requestMatchers(GET,
                                     String.format("%s/post/**", apiPrefix)).permitAll()
+//                            .requestMatchers(POST,
+//                                    String.format("%s/post/**", apiPrefix)).permitAll()
                             .requestMatchers(GET,
                                     String.format("/swagger-ui.html")).permitAll()
                             .anyRequest()

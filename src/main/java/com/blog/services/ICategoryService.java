@@ -12,6 +12,7 @@ public interface ICategoryService {
     List<Category> categoryList ();
     Category getCategoryById(long categoryId);
 
-    CategoryPostsResponse getPostsByCategoryId(long categoryId);
+    CategoryPostsResponse getPostsByCategorySlug(String slug);
+    List<CategoryPostsResponse> getPostsAdmin();
     void hideCategory(long categoryId);
 }

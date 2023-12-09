@@ -1,5 +1,6 @@
 package com.blog.services;
 
+import com.blog.controllers.PostController;
 import com.blog.exceptions.DataNotFoundException;
 import com.blog.exceptions.ExistData;
 import com.blog.models.Category;
@@ -13,6 +14,7 @@ import com.blog.responses.PostResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,7 +28,7 @@ public class PostService implements IPostService{
     @Autowired
     private ICategoryRepository categoryRepository;
     @Override
-    public void createPost(PostDTO postDTO) {
+    public void createPost(PostDTO postDTO,String image) {
         Category category = categoryRepository.findCategoryById(postDTO.getCategoryId()).orElseThrow(
                 () -> new DataNotFoundException("Category is not found")
         );
@@ -39,14 +41,17 @@ public class PostService implements IPostService{
                 .content(postDTO.getContent())
                 .postCategory(category)
                 .postUser(user)
+                .image(image)
+                .desc(postDTO.getDesc())
+                .slug(postDTO.getSlug())
                 .build();
 
         postRepository.save(post);
     }
 
     @Override
-    public PostResponse getPostById(long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(
+    public PostResponse getPostBySlug(String slug) {
+        Post post = postRepository.findPostBySlug(slug).orElseThrow(
                 () -> new DataNotFoundException("post is not found")
         );
         return PostResponse.fromPost(post);
@@ -69,5 +74,10 @@ public class PostService implements IPostService{
     @Override
     public void deletePost(long postId) {
 
+    }
+
+    @Override
+    public List<PostResponse> getPosts() {
+        return postRepository.findPostsOrderByUpdatedAt().stream().map(PostResponse::fromPost).toList();
     }
 }

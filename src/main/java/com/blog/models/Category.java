@@ -19,5 +19,7 @@ public class Category {
     @Column(name = "name", length = 100)
     private String name;
 
+    private String slug;
+
     private boolean active;
 }

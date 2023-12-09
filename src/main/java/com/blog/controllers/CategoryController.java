@@ -43,15 +43,23 @@ public class CategoryController {
         return ResponseEntity.ok(categories);
     }
 
-    @GetMapping("/{categoryId}")
-    public ResponseEntity<?> GetPostsByCategoryId(@PathVariable("categoryId") long categoryId) {
+    @GetMapping("/{slug}")
+    public ResponseEntity<?> GetPostsByCategoryId(@PathVariable("slug") String slug) {
         try{
-        CategoryPostsResponse responses = categoryService.getPostsByCategoryId(categoryId);
+        CategoryPostsResponse responses = categoryService.getPostsByCategorySlug(slug);
             return ResponseEntity.ok(responses);
         }catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-
+    }
+    @GetMapping("/admin/get-posts")
+    public ResponseEntity<?> GetPostsByCategoryAdmin() {
+        try{
+            List<CategoryPostsResponse> responses = categoryService.getPostsAdmin();
+            return ResponseEntity.ok(responses);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{categoryId}")

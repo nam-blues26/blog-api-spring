@@ -25,6 +25,14 @@ public class Post extends BaseEntity {
     @Column(name = "content", nullable = false)
     private String content;
 
+    @Column(name = "description", nullable = false)
+    private String desc;
+
+    @Column(name = "image")
+    private String image;
+
+    @Column(name = "slug")
+    private String slug;
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category postCategory;

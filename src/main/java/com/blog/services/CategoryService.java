@@ -12,6 +12,7 @@ import com.blog.responses.PostResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -49,13 +50,26 @@ public class CategoryService implements ICategoryService{
     }
 
     @Override
-    public CategoryPostsResponse getPostsByCategoryId(long categoryId) {
-        Category category = categoryRepository.findCategoryById(categoryId).orElseThrow(
+    public CategoryPostsResponse getPostsByCategorySlug(String slug) {
+        Category category = categoryRepository.findCategoryBySlug(slug).orElseThrow(
                 () -> new DataNotFoundException("Category is not found")
         );
         List<PostResponse> postResponseList = postRepository.findPostsByPostCategory(category).stream().map(PostResponse::fromPost).toList();
         CategoryPostsResponse response = new CategoryPostsResponse(category.getName(), postResponseList);
         return response;
+    }
+
+    @Override
+    public List<CategoryPostsResponse> getPostsAdmin() {
+        List<Category> categoryList = categoryRepository.findAll();
+        List<CategoryPostsResponse> responses = new ArrayList<>();
+        for (Category category:
+        categoryList) {
+            List<PostResponse> postResponseList = postRepository.findPostsByPostCategory(category).stream().map(PostResponse::fromPost).toList();
+            CategoryPostsResponse index = new CategoryPostsResponse(category.getName(),postResponseList);
+            responses.add(index);
+        }
+        return responses;
     }
 
     @Override

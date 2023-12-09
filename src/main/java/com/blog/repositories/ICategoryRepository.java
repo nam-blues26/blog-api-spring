@@ -11,4 +11,6 @@ public interface ICategoryRepository extends JpaRepository<Category, Long> {
     Boolean existsByName(String name);
 
     Optional<Category> findCategoryById(long id);
+
+    Optional<Category> findCategoryBySlug(String slug);
 }
